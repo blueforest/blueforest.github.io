@@ -1,0 +1,16 @@
+---
+layout: post
+title:  "怎样绑定自己的域名到github主页"
+date:   2012-11-12 18:35:09
+categories: tech
+---
+
+通过github page创建自己的主页后可以将`username.github.io`绑定到自己的域名上.
+
+# 步骤
+
+- 第一步,保证自己的github主页已经生成并可以访问;
+- 第二步,在自己网站根目录创建`CNAME`文件(注意没有文件名后缀),里面写上自己的域名并push到主页项目仓库里.
+![img](/assets/images/cname.png)
+- 第三步,前往你的域名服务商新建一个`CNAME`解析至你的github page个人主页
+![img](/assets/images/yum.png)
