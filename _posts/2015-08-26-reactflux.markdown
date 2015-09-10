@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "react flux浅析"
-date:   2015-09-26 12:15:09
+date:   2015-08-26 12:15:09
 categories: tech
 ---
 
