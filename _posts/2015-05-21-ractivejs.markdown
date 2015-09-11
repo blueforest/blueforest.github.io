@@ -4,6 +4,9 @@ title:  "ractivejs简介"
 date:   2015-05-21 12:15:09
 categories: tech
 ---
+
+![img](/assets/images/ractive.png)
+
 ### 为什么要用Ractive.js?
 日常项目中工具类产品页面交互复杂,仅仅基于jQuery的开发方式已经不能满足界面复杂交互的要求.在新项目的前端开发中采用了[Ractive.js](http://www.ractivejs.org/)这个简单却功能强大的JS库,它实现了数据绑定、DOM实时更新、模板、事件处理等多个有用的功能,它专注于UI层,学习成本低.现有关于前端MVC方面的框架很多,例如angularjs、backbone等,他们提供了一整套的解决方案,比如路由、模板、数据双向绑定的,但是这些框架对于后端同学而言学习成本太高(比如说要用angular的话你就要明白什么是依赖注入、scope、directive这些概念),不符合现在与后端开发共建产品的实际情况.下面简单的介绍ractive的几个非常重要的特性,希望能帮大家快速入门.
 
