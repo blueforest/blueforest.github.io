@@ -158,6 +158,7 @@ var Outer = Ractive.extend({
 ## Single-file components
 [single-file](https://github.com/ractivejs/component-spec/)其实就是一个HTML文件,它包含了template、style、以及对应的组件逻辑,这种方式有点类似webComponent,例如写一个Grid组件,
 
+
 ```html
 
 <table class="table">
@@ -196,7 +197,7 @@ component.exports= {
 
 怎样去使用这个component?这里必须用到[ractive-load](https://github.com/ractivejs/ractive-load),因为ractive-load能将component文件转化为`Ractive.extend()`生成的对象.例如
 
-```
+```html
 <html>
 <head><title>Ractive component demo</title></head>
 <body>
