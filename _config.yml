@@ -1,13 +1,13 @@
 # Site settings
-title: Bluforest
+title: Blueforest
 email: siweiran@gmail.com
-description: > # 我的技术博客
+description: > # 思伟的blog
 baseurl: "" # the subpath of your site, e.g. /blog/
-url: "http://blueforest.github.io" # the base hostname & protocol for your site
-
+url: "http://siweiran.com" # the base hostname & protocol for your site
 github_username:  blueforest
-
 # Build settings
+
 markdown: kramdown
 kramdown:
  input: GFM
+ syntax_highlighter: rouge

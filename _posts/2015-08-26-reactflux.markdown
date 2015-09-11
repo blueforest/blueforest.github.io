@@ -15,7 +15,7 @@ Action就是用户与view层之间的交互行为,Action会触发Dispatcher,Disp
 
 - 1.Header组件中触发dispatcher
 
-```
+```javascript
 //react componets
 var Header = React.creatClass({
 	render:function(){
@@ -31,7 +31,7 @@ var Header = React.creatClass({
 ```
 - 2.dispatch分发给注册的回调传递动作,这里的`动作`实际就是一个对象，它包含数据(payload)与类型(actionType)两部分
 
-```
+```javascript
 //TodoActions
 var TodoActions = {
   create: function(text) {
@@ -45,7 +45,7 @@ var TodoActions = {
 
 - 3.在回调中处理数据,并广播消息,这是使用Nodejs自带的Event模块
 
-```
+```javascript
 var EventEmitter = require('events').EventEmitter;
 var emitter = new EventEmitter();
 
@@ -79,7 +79,7 @@ AppDispatcher.register(function(action){
 ```
 - 4.在Todo组件中监听TosoStore的change事件，并从store暴露的方法获取新数据,然后更新view
 
-```
+```javascript
 var TodoApp = React.creatClass({
 	getInitialState:function(){
 		return{
@@ -103,7 +103,7 @@ var TodoApp = React.creatClass({
 
 首先我们看下dispatch的[源码](https://github.com/facebook/flux/blob/master/dist/Flux.js).dispatch提供了5个方法:`register`,`unregister`,`waitFor`,`dispatch`,`isDispatching`,这里register与dispatch就是类似我们常见的订阅与发布,不同的是dispatch执行的时候会将参数分发给所有注册的回调函数，而传统的pub/sub会指定特定的订阅类型.
 
-```
+```javascript
 Dispatcher.prototype.dispatch = function dispatch(payload) {
 !!this._isDispatching ? true ? invariant(false, 'Dispatch.dispatch(...): Cannot dispatch in the middle of a dispatch.') : invariant(false) : undefined;
 	this._startDispatching(payload);
@@ -122,7 +122,7 @@ Dispatcher.prototype.dispatch = function dispatch(payload) {
 ```
 register只是一个简单的订阅,它会返回一个id,
 
-```
+```javascript
 Dispatcher.prototype.register = function register(callback) {
 var id = _prefix + this._lastID++;
 this._callbacks[id] = callback;
@@ -134,7 +134,7 @@ register返回的id一般只在waitFor中使用,waitFor可以指定回调的执�
 ## Store
 store的作用与传统的model有点类似,主要用作数据处理,
 
-```
+```javascript
 var EventEmitter = require('events').EventEmitter;
 var emitter = new EventEmitter();
 
@@ -156,7 +156,7 @@ var TodoStore = {
 ## controller-views
 controler-view其实就是react组件,它监听着stores广播的事件,然后从stores中获取数据并且传递这些数据的到它的子组件中,例如
 
-```
+```javascript
 var TodoApp = React.createClass({
 
   getInitialState: function() {
