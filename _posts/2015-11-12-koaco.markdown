@@ -1,0 +1,198 @@
+---
+layout: post
+title:  "co实现原理"
+date:   2015-11-10 10:18:09
+categories: tech
+---
+
+# koa-co实现原理
+
+大家都知道koa是基于co实现的,今天才知道co其实是coroutine(协同程序)的缩写.要理解co的原理，首先要就得从ES6的generator说起:
+## 什么是generator?
+先看一个例子:
+
+```javascript
+function* gen(a){
+  console.log(a);
+  var b = yield a+2;
+  console.log(b)
+}
+
+var g = gen(2);
+console.log( g.next() ); // Object { value=4,  done=false}
+console.log( g.next(3) );// Object { done=true,  value=undefined}
+
+```
+当我们执行`gen(2)`的时候gen里面的代码并没有执行，只有当执行`g.next()`的时候才会执行.第一次执行`next()`会执行到`yield`后面,即`a+2`,然后程序暂停执行并返回`{ value=4,  done=false}`.当再次执行`g.next(3)`的时候继续执行`var b`赋值语句,这时会将参数3赋值给`b`,然后程序继续向下执行直到遇到下一个yield语句,如果没有遇到新的yield语句，就会一直运行到函数结束.最终返回`{done=true,value=undefined}`,如果程序中有return语句,则value的值为return语句后面表达式的值,如果没有return,则value的值为`undefined`.
+
+另一种情况,如何在generator函数内部调用另一个generator函数?这个就需要用到`yield *`语句:
+
+```javascript
+function* ga(){
+  yield 5;
+}
+function* gb(){
+  yield 6;
+}
+function* gen(a){
+  var b = yield a+2;
+  yield *ga();
+  yield *gb();
+  return 2
+}
+var g = gen(2);
+g.next(2);//Object { value=4,  done=false}
+g.next()//Object { value=5,  done=false}
+g.next()//Object { value=6,  done=false}
+g.next()//Object { value=2,  done=true}
+```
+理解上面两个例子,理解co原理就会容易得多.generator是ES6的一个新特性,它实际是一种非常特殊的迭代器,generator函数在执行结束后会将执行权交还给调用者.
+
+## co的简单实现
+
+根据generator的特殊性，我们可以将js里面一些比较繁琐的异步回调转为同步。先看一个简单的CO实现：
+
+```javascript
+var fs = require('fs');
+function read(file) {
+    return function(fn){
+        fs.readFile(file, 'utf8', fn);
+    }
+}
+
+function co(fn){
+    return function(){
+        var ctx = this;
+        var gen = fn.call(ctx);
+
+        function _next(err,res){
+            var ret;
+            ret = gen.next(res);
+            if(ret.done){
+                return;
+            }
+            if(typeof ret.value==="function"){
+                ret.value(_next)
+            }
+        }
+
+        _next()
+    }
+};
+
+co(function*(){
+    var s = yield read('Gruntfile.js');
+    console.log(s.length)
+})()
+
+```
+代码执行过程:
+
+- 代码执行到`gen.next(res)`的时候执行`yield read(Gruntfile.js)`,返回`{value:function(){},done:false}`,这个value的值其实就是read函数return的那个function,即:
+
+```javascript
+function(fn){
+    fs.readFile(file, 'utf8', fn);
+ }
+
+```
+- 代码执行到`ret.value(_next)`,正式执行`fs.readFile`异步获取文件数据,在readFile回调中再执行_next,所以_next带有两个形参:`err,res`,这正是`fs.readFile`回调函数的形参;
+
+- `fs.readFile`的回调执行_next,执行到gen.next(res),这时候会执行`var s=`赋值语句,这就是为什么s能取到readFile异步返回的数据的原因.
+
+上述代码简单了模拟了下co的实现过程,基本思路就是：在co内部的异步函数封装成偏函数(返回值是function)的形式,然后在回调中继续调用_next.
+
+## co的实现
+co的源码在[这里](https://github.com/tj/co/blob/master/index.js),co的源码并不复杂,它是基于Promise实现的.我们再用Promise的方式将上面的例子再实现一遍,首先改写readFile函数:
+
+```javascript
+var fs = require('fs');
+function read(file) {
+    return new Promise(function(resolve,reject){
+    	 fs.readFile(file, 'utf8', function(err,result){
+    	 	if(err){
+    	 		reject(err);
+    	 	}else{
+    	 		resolve(result);
+    	 	}
+    	 });
+    })
+ }
+
+```
+将co源码的核心部分拿出来,这里省略了源码中`thunkToPromise`这些，因为我们定义的read这个function本身返回的就是Promise.
+
+```javascript
+
+var slice = Array.prototype.slice;
+
+function co(gen) {
+    var ctx = this;
+    var args = slice.call(arguments, 1);
+
+    return new Promise(function(resolve, reject) {
+        if (typeof gen === 'function') gen = gen.apply(ctx, args);
+        if (!gen || typeof gen.next !== 'function') return resolve(gen);
+
+        onFulfilled();
+
+        function onFulfilled(res) {
+            var ret;
+            try {
+                ret = gen.next(res);
+            } catch (e) {
+                return reject(e);
+            }
+            next(ret);
+        }
+
+
+
+        function onRejected(err) {
+            var ret;
+            try {
+                ret = gen.throw(err);
+            } catch (e) {
+                return reject(e);
+            }
+            next(ret);
+        }
+
+        function next(ret) {
+            if (ret.done) return resolve(ret.value);
+            var value = toPromise.call(ctx, ret.value);
+            if (value && isPromise(value)) return value.then(onFulfilled, onRejected);
+            return onRejected(new TypeError('You may only yield a function, promise, generator, array, or object, '
+            + 'but the following object was passed: "' + String(ret.value) + '"'));
+        }
+
+    });
+};
+
+function toPromise(obj) {
+    if (!obj) return obj;
+    if (isPromise(obj)) return obj;
+}
+
+function isPromise(obj) {
+    return 'function' == typeof obj.then;
+}
+
+```
+执行:
+
+```javascript
+co(function*(){
+	var s = yield read('Gruntfile.js');
+})
+```
+上述代码执行过程:
+
+- 第一次代码会执行到`gen.next(res)`,此时res的值为`undefined`,ret的执行结果为`{ value: {}, done: false }`,其实value的值为read函数中返回的Promise对象;
+- 继续执行next(ret)方法,执行`value.then(onFulfilled, onRejected)`,在这里正式执行`readFile`方法读取文件内容,正确读取后将正确结果`resolve`.然后执行``onFullfilled`(Promise流程),res的值就是`resolve`带过来的值.
+
+基于Promise实现的co基本思路其实就是在onFulfilled中循环调用next,使异步流程同步化.
+
+## 中间件队列
+koa的中间件机制是通过[compose](https://github.com/koajs/compose/blob/master/index.js)模块来实现的.....
+
