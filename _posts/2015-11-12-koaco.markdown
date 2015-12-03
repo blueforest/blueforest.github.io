@@ -13,9 +13,9 @@ categories: tech
 
 ```javascript
 function* gen(a){
-  console.log(a);
+  console.log(a);//2
   var b = yield a+2;
-  console.log(b)
+  console.log(b) //3
 }
 
 var g = gen(2);
@@ -23,9 +23,16 @@ console.log( g.next() ); // Object { value=4,  done=false}
 console.log( g.next(3) );// Object { done=true,  value=undefined}
 
 ```
-当我们执行`gen(2)`的时候gen里面的代码并没有执行，只有当执行`g.next()`的时候才会执行.第一次执行`next()`会执行到`yield`后面,即`a+2`,然后程序暂停执行并返回`{ value=4,  done=false}`.当再次执行`g.next(3)`的时候继续执行`var b`赋值语句,这时会将参数3赋值给`b`,然后程序继续向下执行直到遇到下一个yield语句,如果没有遇到新的yield语句，就会一直运行到函数结束.最终返回`{done=true,value=undefined}`,如果程序中有return语句,则value的值为return语句后面表达式的值,如果没有return,则value的值为`undefined`.
+上述代码执行顺序如下:
 
-另一种情况,如何在generator函数内部调用另一个generator函数?这个就需要用到`yield *`语句:
+ - 当我们执行 `gen(2)` 的时候gen里面的代码并没有执行，只有当执行`g.next()`的时候才会执行.
+ - 第一次执行`next()`会执行到`yield`后面,即`a+2`,然后程序暂停执行并返回`{ value=4,  done=false}`.
+ - 当继续执行`g.next(3)`的时候执行`var b =`赋值语句,这时会将参数3赋值给`b`.
+ - 程序继续向下执行直到遇到下一个yield语句,如果没有遇到新的yield语句,就会一直运行到函数结束.
+
+ 注意:如果程序结束有return语句,则` value` 的值为return语句后面表达式的值,如果没有return,则value的值为`undefined`,例如上述代码结尾没有return语句则返回`{done=true,value=undefined}`.
+
+再来说下另一种情况,如何在generator函数内部调用另一个generator函数?这就需要用到`yield *`语句:
 
 ```javascript
 function* ga(){
@@ -50,7 +57,7 @@ g.next()//Object { value=2,  done=true}
 
 ## co的简单实现
 
-根据generator的特殊性，我们可以将js里面一些比较繁琐的异步回调转为同步。先看一个简单的CO实现：
+根据generator的特殊性，我们可以简化js里面比较繁琐的异步回调操作。先看一个简单的CO实现( 我也拿读取文件作为例子:) )：
 
 ```javascript
 var fs = require('fs');
@@ -96,14 +103,14 @@ function(fn){
  }
 
 ```
-- 代码执行到`ret.value(_next)`,正式执行`fs.readFile`异步获取文件数据,在readFile回调中再执行_next,所以_next带有两个形参:`err,res`,这正是`fs.readFile`回调函数的形参;
+- 代码执行到`ret.value(_next)`,正式执行`fs.readFile`异步获取文件数据,在`fs.readFile`回调中再执行_next,所以_next带有的两个形参 `err与res` 正是`fs.readFile`回调函数的形参;
 
-- `fs.readFile`的回调执行_next,执行到gen.next(res),这时候会执行`var s=`赋值语句,这就是为什么s能取到readFile异步返回的数据的原因.
+- `fs.readFile`的回调继续执行`_next`,执行到gen.next(res),这时res的值是有值的,它的值是读取文件返回的文件信息.执行`var s=`赋值语句将res的赋给s,这就是为什么s能取到readFile异步返回的数据的原因.
 
-上述代码简单了模拟了下co的实现过程,基本思路就是：在co内部的异步函数封装成偏函数(返回值是function)的形式,然后在回调中继续调用_next.
+上述代码简单了模拟了下co的实现过程,co简化异步操作的基本原理就是：把co内部的异步操作函数封装成偏函数(返回值是function)的形式,然后在异步操做的回调中继续调用next(说的有点绕,看懂上面代码就ok了).
 
 ## co的实现
-co的源码在[这里](https://github.com/tj/co/blob/master/index.js),co的源码并不复杂,它是基于Promise实现的.我们再用Promise的方式将上面的例子再实现一遍,首先改写readFile函数:
+co的源码在[这里](https://github.com/tj/co/blob/master/index.js),其实源码并不复杂,它是基于Promise实现的.我们再用Promise的方式将上面的例子再实现一遍,首先改写readFile函数:
 
 ```javascript
 var fs = require('fs');
@@ -188,10 +195,10 @@ co(function*(){
 ```
 上述代码执行过程:
 
-- 第一次代码会执行到`gen.next(res)`,此时res的值为`undefined`,ret的执行结果为`{ value: {}, done: false }`,其实value的值为read函数中返回的Promise对象;
-- 继续执行next(ret)方法,执行`value.then(onFulfilled, onRejected)`,在这里正式执行`readFile`方法读取文件内容,正确读取后将正确结果`resolve`.然后执行``onFullfilled`(Promise流程),res的值就是`resolve`带过来的值.
+- 第一次代码会执行到`gen.next(res)`,此时res的值为`undefined`,ret的执行结果为`{ value: {}, done: false }`,这里value的值为read函数中返回的Promise对象;
+- 继续执行next(ret)方法,执行`value.then(onFulfilled, onRejected)`,在这里正式执行`readFile`方法读取文件内容,正确读取后将正确结果塞到`resolve`,然后执行``onFullfilled`(Promise流程),res的值就是`resolve`带过来的值.
 
-基于Promise实现的co基本思路其实就是在onFulfilled中循环调用next,使异步流程同步化.
+基于Promise实现的co基本思路其实就是在onFulfilled中循环调用next.
 
 ## 中间件队列
 koa的中间件机制是通过[compose](https://github.com/koajs/compose/blob/master/index.js)模块来实现的.....

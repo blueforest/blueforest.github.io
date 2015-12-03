@@ -1,0 +1,55 @@
+---
+layout: post
+title:  "node项目的搭建以及部署"
+date:   2015-12-03 22:18:09
+categories: tech
+---
+
+日常项目中node应用越来越多,本文主要介绍基于koa的开发框架搭建以及部署.
+
+## 脚手架介绍
+已经搭建好的项目结构可以看[这里](https://github.com/blueforest/nodeApp),可以clone下来直接`npm install`然后`npm start`.
+与其他的MVC开发框架不同的是这里没有`model` `controller` `routers`目录,是因为我觉得这样划分当项目文件很庞大以后不利于文件查找,以前后期维护的时候经常要根据router文件找对应的controller，要在不同的文件夹找,现在是按照具体应用的维度来划分,比如`app/index`目录里面就是放的首页对应的router文件与controller文件.所有的模板文件放在`app/view`下面.具体实现的代码是在`server.js`里:
+
+``` javascript
+util.getGlobbedFiles('app/**/*.routers.js').forEach(function(routePath) {
+		try {
+			require(path.resolve(routePath))(app);
+		} catch (err) {
+			console.log(err.stack);
+		}
+});
+
+```
+
+## 项目打包构建
+项目打包构建的脚本在`bin/build.sh`里,具体流程如下:
+
+- 通过git从仓库拉取新的代码
+- 执行npm install
+- 写入对应的环境变量(NODE_ENV)
+
+## 部署脚本
+应用启动可以采用[pm2](https://github.com/Unitech/pm2)模块,它可以做到不间断重启、集群管理、负载均衡，在这里我没有采用任何第三方模块,自己写了一个启动脚本,放在根目录的`deploy.sh`,这里我们把端口PORT设置成了80,找到nodejs的安装路径(which node),我的机器安装路径为`/usr/local/bin/node`,设置输出日志为`/home/admin/nodeApp/logs/nodejs_stdout.log`.这里的`admin`是我机器新增的一个用户,所有的项目文件放在改目录下面.设置node启动:
+
+```
+start()
+{
+      $NODEJS --harmony  bin/app.js >$STDOUT_LOG 2>&1 &
+      echo "app start"
+}
+```
+node应用进程结束:
+
+```
+stop()
+{
+        ps -ef |grep node|grep -v grep|awk '{print $2}'|xargs kill -9
+        echo "App stopped."
+}
+
+```
+
+## 部署应用
+- 控制台执行`sh bin/build.sh`
+- 切换到root账号下执行`sh deploy.sh start`,因为这里node应用生成环境端口配置的是80，必须在root账号启动。当然node应用可以配置其它端口，然后ngix的80端口代理到对应的端口
