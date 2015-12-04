@@ -22,6 +22,42 @@ util.getGlobbedFiles('app/**/*.routers.js').forEach(function(routePath) {
 
 ```
 
+## 多进程架构
+利用Nodejs多核处理模块`cluster`，我们可以根据CPU的数量来创建多个进程,用户的请求会被分配到不同的进程上,
+
+```javascript
+var cluster = require('cluster');
+var numCPUs = require('os').cpus().length;
+if (cluster.isMaster) {
+  // Fork workers.
+  for (var i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  };
+
+    cluster.on('listening',function(worker,address){
+        console.log('listening: worker ' + worker.process.pid +', Address: '+address.address+":"+address.port);
+    });
+
+    cluster.on('exit', function(worker, code, signal) {
+    console.log('worker ' + worker.process.pid + ' died');
+    });
+} else {
+    var server = app.listen(port, function () {
+        console.log('app server listening on port ' + server.address().port)
+    //logger.info('app server listening on port ' + server.address().port);
+    });
+
+}
+```
+我本地是4核,可以看到开了4个进程
+
+![img](http://gtms02.alicdn.com/tps/i2/TB1zURiKVXXXXXYaXXXg6PaMXXX-364-106.png)
+
+![img](http://gtms03.alicdn.com/tps/i3/TB1hpdLKVXXXXbBXXXXJoejGXXX-908-163.png)
+
+我在项目采用的是[recluster](https://github.com/doxout/recluster)+[graceful](https://github.com/node-modules/graceful)来实现多进程和服务器稳定性的工作.
+想要对node多核了解更多可以看看这篇[文章](http://hao.jser.com/archive/7011/)
+
 ## 项目打包构建
 项目打包构建的脚本在`bin/build.sh`里,具体流程如下:
 
