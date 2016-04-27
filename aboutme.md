@@ -1,3 +1,10 @@
+---
+layout: page
+title: aboutme
+permalink: /aboutme/
+---
+
+
 # 关于我
 
 - 姓名:冉思伟
