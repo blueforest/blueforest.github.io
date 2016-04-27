@@ -87,7 +87,7 @@ stop()
 ```
 
 ## 部署应用
-- 在admin账号下执行`sh bin/build.sh`(git clone只有在admin才有权限)
+- 在admin账号下执行`sh bin/build.sh`(git clone只有在admin才有权限) 
 - 切换到root账号下执行`sh deploy.sh start`,因为这里node应用生成环境端口配置的是80，必须在root账号启动。当然node应用可以配置其它端口，然后ngix的80端口代理到对应的端口
 
 ## 80端口代理到node应用设置的端口
