@@ -5,7 +5,7 @@ date:   2015-10-7 10:18:09
 categories: life
 ---
 
-首先来张我老家风景
+老家风景
 
 ![img](https://img.alicdn.com/imgextra/i4/258808662/TB2WV5MfVXXXXaVXpXXXXXXXXXX_!!258808662.jpg)
 
@@ -50,11 +50,7 @@ categories: life
 ![img](https://img.alicdn.com/imgextra/i4/258808662/TB2yIGQfVXXXXajXpXXXXXXXXXX_!!258808662.jpg)
 
 
-双方礼物交接仪式
 
-![img](https://img.alicdn.com/imgextra/i2/258808662/TB27eq3fVXXXXbNXXXXXXXXXXXX_!!258808662.jpg)
-
-![img](https://img.alicdn.com/imgextra/i1/258808662/TB28U1VfVXXXXc_XXXXXXXXXXXX_!!258808662.jpg)
 
 第二天一大早化妆准备~
 
@@ -118,9 +114,7 @@ categories: life
 
 ![img](https://img.alicdn.com/imgextra/i2/258808662/TB2gOSTfVXXXXXLXpXXXXXXXXXX_!!258808662.jpg)
 
-夫妻吃糖~
 
-![img](https://img.alicdn.com/imgextra/i4/258808662/TB2fx_bfVXXXXXjXXXXXXXXXXXX_!!258808662.jpg)
 
 招待亲朋好友
 

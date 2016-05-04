@@ -6,4 +6,3 @@ permalink: /about/
 
 
 
-# 微信号:ransiwei
