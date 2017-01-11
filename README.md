@@ -9,6 +9,8 @@
 
 ```
 $ sudo gem install jekyll
+
+$ sudo gem install redcarpet 安装markdown渲染器
 $ jekyll --version 然后，在本地编译你的repository。
 
 $ jekyll build --safe jekyll给出的出错信息还是很详细的，能看出在什么位置发生了错误.
